@@ -1,38 +1,64 @@
+// *#Gemini Ai Api Guide Code | بإمكانه قرأة الصور أيضا ✅*
+// https://whatsapp.com/channel/0029Vab5oDNElagpHtJjmT0B
+import fs from 'fs';
 import fetch from 'node-fetch';
+import FormData from 'form-data';
 
-let handler = async (m, { conn, text, args, usedPrefix, command }) => {
-  try {
-    if (!text) throw 'uhm.. what do you want to say?';
-    await m.react('🤖');
+let handler = async (message, { text, conn, usedPrefix, command }) => {
+ if (!text && (!message.quoted || !message.quoted.text)) {
+ throw "هلا انا ساسكي\n\n*مثال:\n" + (usedPrefix + command) + " قول قص لي قصه انمي عن الشجاعه*\n*ملاحظة بوت ساسكي*\n";
+ }
+ 
+ try {
+ const encodedText = encodeURIComponent(text);
+ let imag = ''; 
+ let targetMessage = message.quoted ? message.quoted : message;
 
-    const prompt = encodeURIComponent(text);
-    let userid = conn.getName(m.sender) || "default"
-    let apiurl = `https://api.guruapi.tech/ai/gpt4?username=${userid}&query=hii${prompt}`;
 
-    const result = await fetch(apiurl);
-    const response = await result.json();
-    
-    if (!response.msg) throw 'No result found';
+ if ((targetMessage.msg || targetMessage).mimetype || targetMessage.mediaType || "") {
+ let mimeType = (targetMessage.msg || targetMessage).mimetype || targetMessage.mediaType || "";
+ if (mimeType.startsWith("video/")) {
+ return message.reply("❌ يرجى الرد على صورة، لا فيديو!");
+ }
+    let q = message.quoted ? message.quoted : message;
+    let mime = q.mediaType || '';
+ if (/image|sticker|document/.test(mimeType)) {
+ 
+ let media = await targetMessage.download(true);  
+ let data = await uploadFile(media);
+ imag = data.files[0].url || '';  
+ }
+ }
 
-    const replyText = response.msg;
-    await conn.sendButton(
-      m.chat, 
-      replyText, 
-      author, 
-      'https://envs.sh/wHc.jpg', 
-      [['الــمــطـور', `.المطور`]], 
-      null, 
-      [['قــنـاة الــبــوت', `https://whatsapp.com/channel/0029VaklBGFHFxOwODjsoP13`]], 
-      m
-    );
-  } catch (error) {
-    console.error(error);
-    m.reply('*مرحبا ضع سؤالك يا اخي 🤡*');
-  }
+ const apiUrl = `https://joanimi-apis-for-devs.vercel.app/api/gemini?text=${encodedText}&img=${imag}`;
+ 
+ conn.sendPresenceUpdate("composing", message.chat);
+ const response = await fetch(apiUrl);
+ const jsonResponse = await response.json();
+ const result = jsonResponse.result;
+ message.reply(result);
+ } catch (error) {
+ console.error("Error:", error);
+ throw "حدث عطل ما";
+ }
 };
 
-handler.help = ['gpt4 <text>'];
-handler.tags = ['tools'];
-handler.command = /^(بوت)$/i;
+handler.help = ["جيم"];
+handler.tags = ["AI"];
+handler.command = ["جيم","gem","gemini","بوت"];
 
 export default handler;
+
+async function uploadFile(path) {
+ let form = new FormData();
+ form.append('files[]', fs.createReadStream(path));
+ let res = await (await fetch('https://uguu.se/upload.php', {
+ method: 'post',
+ headers: {
+ ...form.getHeaders()
+ },
+ body: form
+ })).json();
+ await fs.promises.unlink(path); 
+ return res;
+   }
