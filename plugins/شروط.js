@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+/*import { createHash } from 'crypto';
 import { canLevelUp, xpRange } from '../lib/levelling.js';
 import fetch from 'node-fetch';
 import fs from 'fs';
@@ -94,3 +94,4 @@ function ucapan() {
     if (time >= 18) res = "مساء الخير 🌙";
     return res;
                          }
+*/
